@@ -16,6 +16,13 @@ __pycache__/
 best_ckpt.pt
 
 
+# # Local downloads / Audio files
+# *.wav
+# *.mp3
+# *.ogg
+# *.m4a
+# *.flac
+
 # OS specific files
 .DS_Store
 .DS_Store?
