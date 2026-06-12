@@ -1,0 +1,29 @@
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Python caching
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Large files / Model checkpoints
+*.pt
+*.pth
+*.ckpt
+best_ckpt.pt
+
+# Local downloads / Audio files
+*.wav
+*.mp3
+*.ogg
+*.m4a
+*.flac
+
+# OS specific files
+.DS_Store
+.DS_Store?
+ehthumbs.db
+Thumbs.db
