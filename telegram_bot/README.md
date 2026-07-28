@@ -16,7 +16,24 @@ pip install -e .            # installs the kitpri package
 brew install ffmpeg          # voice messages arrive as .ogg
 ```
 
-## Run
+## Run — the easy way
+
+One-time: create a `.env` file at the repo root (gitignored) containing:
+
+```
+TELEGRAM_BOT_TOKEN=<token from @BotFather>
+```
+
+Then:
+
+```bash
+telegram_bot/start.sh            # start (auto-restarts a running instance)
+telegram_bot/start.sh status     # is it running?
+telegram_bot/start.sh log        # follow the live log
+telegram_bot/start.sh stop       # stop
+```
+
+## Run — manual
 
 ```bash
 export TELEGRAM_BOT_TOKEN=...    # from @BotFather — NEVER pass via --token (visible in `ps`)
