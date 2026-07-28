@@ -24,8 +24,8 @@ from telegram.ext import (
     filters,
 )
 
-from model import load_model
-from inference import classify
+from model_v4 import load_model
+from inference_v4 import classify
 
 
 # ── Logging ───────────────────────────────────────────────────────────────────
@@ -48,7 +48,7 @@ def get_device() -> torch.device:
 # ── Globals (set at startup) ──────────────────────────────────────────────────
 MODEL = None
 DEVICE = None
-THRESHOLD = 0.72
+THRESHOLD = 0.44
 
 
 # ── Handlers ─────────────────────────────────────────────────────────────────
@@ -135,10 +135,16 @@ def main():
     global MODEL, DEVICE, THRESHOLD
 
     parser = argparse.ArgumentParser(description="Kitchen Audio Telegram Bot")
-    parser.add_argument("--token", required=True, help="Telegram Bot Token from @BotFather")
-    parser.add_argument("--ckpt", default="best_ckpt.pt", help="Path to best_ckpt.pt")
-    parser.add_argument("--threshold", type=float, default=0.72, help="Probability threshold for Cooking class (default: 0.72)")
+    parser.add_argument("--token", default=os.environ.get("TELEGRAM_BOT_TOKEN"),
+                        help="Telegram Bot Token (or set TELEGRAM_BOT_TOKEN env var)")
+    parser.add_argument("--ckpt", default="kitpri_v4_submission/inference/student_mobilenet_fp32.pt",
+                        help="Path to the KitPri v4 FP32 student checkpoint")
+    parser.add_argument("--threshold", type=float, default=0.44,
+                        help="Probability threshold for Cooking class (default: 0.44, tuned on v4 validation set)")
     args = parser.parse_args()
+
+    if not args.token:
+        parser.error("provide --token or set TELEGRAM_BOT_TOKEN")
 
     THRESHOLD = args.threshold
 
