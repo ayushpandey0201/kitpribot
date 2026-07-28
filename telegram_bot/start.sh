@@ -20,7 +20,8 @@ case "${1:-start}" in
       || echo "bot STOPPED"
     exit 0 ;;
   log)
-    exec tail -f bot.log ;;
+    # Redact any token that older log lines may contain
+    exec tail -f bot.log | sed -E 's#bot[0-9]+:[A-Za-z0-9_-]+#bot<TOKEN-REDACTED>#g' ;;
   start) ;;
   *) echo "usage: telegram_bot/start.sh [stop|status|log]"; exit 2 ;;
 esac
