@@ -1,0 +1,13 @@
+# KitPri v4 preprocessing profile - VERIFIED constants. Do not change.
+# predict.py reproduced training-time probabilities within 0.0015 with exactly
+# these values (see results/kitpri_v4_distilled_mobilenet/test_predictions.csv).
+audio:
+  sample_rate: 32000
+  clip_duration: 10.0        # seconds -> 320,000 samples
+  n_mels: 128
+  n_fft: 1024
+  hop_length: 512
+  db_top_db: 80
+  normalization: per_clip    # (x - x.mean()) / (x.std() + 1e-6)
+  channels: 3                # mono mel repeated to 3 channels
+  resize: null               # deliberately NO resize - natural 128 x 626 shape

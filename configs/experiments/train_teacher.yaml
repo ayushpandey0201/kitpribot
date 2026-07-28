@@ -1,0 +1,16 @@
+# Teacher training experiment. Runs on Kaggle (data is remote).
+include:
+  - ../base.yaml
+  - ../audio/mel_32k_10s.yaml
+  - ../models/ast_teacher.yaml
+
+training:
+  epochs: 20
+  batch_size: 16
+  lr: 1.0e-4
+  weight_decay: 0.01
+  scheduler: cosine
+  early_stopping_patience: 5
+  monitor: val_f1
+  # Reference outcome: best epoch 1, early stopped at 6
+  # (results/kitpri_v4_ast_diagnostic/training_log.csv).

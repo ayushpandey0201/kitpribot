@@ -1,0 +1,17 @@
+Best epoch: 1
+Best val_f1: 0.8233
+
+TEST accuracy:  0.8200
+TEST f1:        0.8129
+TEST precision: 0.8462
+TEST recall:    0.7822
+TEST auc:       0.8976
+
+              precision    recall  f1-score   support
+
+  noncooking     0.7975    0.8578    0.8266       225
+     cooking     0.8462    0.7822    0.8129       225
+
+    accuracy                         0.8200       450
+   macro avg     0.8218    0.8200    0.8197       450
+weighted avg     0.8218    0.8200    0.8197       450

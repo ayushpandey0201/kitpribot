@@ -1,0 +1,15 @@
+# INT8 static post-training quantization of the student.
+include:
+  - ../base.yaml
+  - ../audio/mel_32k_10s.yaml
+  - ../models/mobilenetv2_student.yaml
+
+quantization:
+  # Backend is a CONFIG FIELD, not an assumption. Must be set BEFORE
+  # prepare/convert. The shipped v4 artifact was packed with fbgemm (x86) and
+  # verified to produce garbage under ARM's qnnpack engine - the SmartThings
+  # target is ARM, so the deployable artifact must be built with qnnpack.
+  backend: qnnpack           # qnnpack = ARM (SmartThings target) | fbgemm/x86 = dev/CI
+  method: static_ptq
+  calibration_samples: 500   # matches the original run (quantization_report.json)
+  export: torchscript

@@ -1,0 +1,19 @@
+Teacher: kitpri_v4_ast_diagnostic (test_f1=0.8129)
+Distillation: T=3.0, alpha=0.4
+Best epoch: 8
+Best val_f1: 0.7662
+
+TEST accuracy:  0.7356
+TEST f1:        0.7226
+TEST precision: 0.7598
+TEST recall:    0.6889
+TEST auc:       0.8018
+
+              precision    recall  f1-score   support
+
+  noncooking     0.7154    0.7822    0.7473       225
+     cooking     0.7598    0.6889    0.7226       225
+
+    accuracy                         0.7356       450
+   macro avg     0.7376    0.7356    0.7350       450
+weighted avg     0.7376    0.7356    0.7350       450

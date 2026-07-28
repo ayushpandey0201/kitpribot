@@ -1,0 +1,17 @@
+# MobileNetV2 student (timm mobilenetv2_100) - 2,225,153 params.
+# Reference run: results/kitpri_v4_distilled_mobilenet.
+model:
+  name: mobilenetv2_100
+  num_classes: 1
+  pretrained: false
+  # Threshold is PER-MODEL. 0.44 swept on the FP32 student's validation
+  # probabilities (results/.../student_threshold_config.json, val F1 0.7747).
+  threshold: 0.44
+
+# KNOWN LIMITATION carried forward: the INT8 variant inherits 0.44 from the
+# FP32 sweep - it was never independently re-swept on INT8 validation
+# probabilities, and the INT8 output grid (~0.216/logit step, ~5pp near the
+# boundary) makes finer tuning than ~0.05 meaningless. When re-swept, give the
+# INT8 model its own threshold here.
+int8:
+  threshold: 0.44

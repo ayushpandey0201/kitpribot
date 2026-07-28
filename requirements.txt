@@ -1,13 +1,20 @@
-# Telegram bot
-python-telegram-bot==20.7
+# KitPri v4 — merged dependencies (inference + Telegram bot demo)
+# CPU-only torch keeps installs small:
+#   pip install --extra-index-url https://download.pytorch.org/whl/cpu -r requirements.txt
 
-# ML / Audio
+# Core inference (predict.py / kitpri package)
 torch>=2.1.0
 torchaudio>=2.1.0
-torchvision>=0.16.0
-timm>=0.9.12
-numpy>=1.24.0
 soundfile>=0.12.0
+numpy>=1.24.0
+PyYAML>=6.0
 
-# Audio conversion fallback (ogg/m4a → wav via ffmpeg bindings)
-pydub>=0.25.1
+# FP32 student model (`--model fp32` and the Telegram bot)
+timm>=0.9.12
+
+# Telegram bot demo (telegram_bot/) — updated pin: verified against v22
+python-telegram-bot>=22.0
+
+# Dataset builder (training/dataset_creation.py) — optional
+# librosa>=0.10
+# pandas>=2.0

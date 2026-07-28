@@ -1,0 +1,19 @@
+{
+  "chosen_threshold": 0.44,
+  "val_f1_at_chosen": 0.7747368421052632,
+  "val_precision_at_chosen": 0.736,
+  "val_recall_at_chosen": 0.8177777777777778,
+  "val_fpr_at_chosen": 0.29333333333333333,
+  "test_f1_at_chosen": 0.7318181818181818,
+  "test_precision_at_chosen": 0.7488372093023256,
+  "test_recall_at_chosen": 0.7155555555555555,
+  "test_fpr_at_chosen": 0.24,
+  "test_f1_at_default_050": 0.7226107226107226,
+  "low_fpr_alternative": {
+    "threshold": 0.87,
+    "val_f1": 0.6201117318435754,
+    "val_precision": 0.8345864661654135,
+    "val_recall": 0.49333333333333335,
+    "val_fpr": 0.09777777777777778
+  }
+}

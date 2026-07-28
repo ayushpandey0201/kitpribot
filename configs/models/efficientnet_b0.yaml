@@ -1,0 +1,8 @@
+# EfficientNet-B0 - for future comparison runs only. Not part of the v4
+# reported results (six EfficientNet-B0 runs on the v2 dataset all plateaued;
+# see README section 4.3).
+model:
+  name: efficientnet_b0
+  num_classes: 1
+  pretrained: false
+  threshold: 0.5

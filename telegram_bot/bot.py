@@ -1,10 +1,14 @@
 """
-Telegram bot for kitchen audio classification.
+Telegram bot for kitchen audio classification (KitPri v4 demo).
 Accepts: audio file uploads (.wav / .mp3 / .ogg / .m4a) + voice messages.
 Outputs: 🍳 Cooking  or  🔇 Not Cooking
 
-Usage:
-    python bot.py --token YOUR_BOT_TOKEN --ckpt best_ckpt.pt
+Usage (token via environment variable — never on the command line):
+    export TELEGRAM_BOT_TOKEN=...   # from @BotFather
+    python telegram_bot/bot.py      # run from the repo root
+
+Uses the unified kitpri Predictor (FP32 MobileNetV2 student, threshold 0.44)
+— the same code path as inference/predict.py and evaluation.
 """
 
 import argparse
@@ -130,12 +134,13 @@ async def fallback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 def main():
     global PREDICTOR
 
+    repo_root = Path(__file__).resolve().parent.parent
     parser = argparse.ArgumentParser(description="Kitchen Audio Telegram Bot")
     parser.add_argument("--token", default=os.environ.get("TELEGRAM_BOT_TOKEN"),
                         help="Telegram Bot Token (or set TELEGRAM_BOT_TOKEN env var)")
-    parser.add_argument("--ckpt", default="kitpri_v4_submission/inference/student_mobilenet_fp32.pt",
+    parser.add_argument("--ckpt", default=str(repo_root / "inference/student_mobilenet_fp32.pt"),
                         help="Path to the KitPri v4 FP32 student checkpoint")
-    parser.add_argument("--config", default="kitpri_v4_submission/configs/experiments/distill.yaml",
+    parser.add_argument("--config", default=str(repo_root / "configs/experiments/distill.yaml"),
                         help="kitpri experiment config (audio profile + per-model threshold)")
     parser.add_argument("--threshold", type=float, default=None,
                         help="Override the config threshold (default: from config, 0.44)")

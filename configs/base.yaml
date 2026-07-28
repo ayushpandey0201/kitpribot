@@ -1,0 +1,20 @@
+# KitPri v4 - shared defaults.
+# Experiment configs include this first; later includes / local keys override.
+
+seed: 42
+
+data:
+  # Dataset is remote (Kaggle) - never committed. Override locally with
+  # KITPRI_DATA_ROOT (e.g. ~/Downloads/kitpri_v3_data which holds the v4 splits).
+  root: ${oc.env:KITPRI_DATA_ROOT,/kaggle/input/datasets/ayushalia/kitpri-v4}
+  audio_subdir: audio_32k
+  metadata_dir: metadata
+
+# Label convention - verified against test_predictions.csv (rows prefixed c_
+# have true_label=1) and metadata CSVs (label==1 <=> audio_32k/cooking/, 0
+# exceptions in 450 rows). Mirrored in src/kitpri/labels.py. Do not flip.
+labels:
+  cooking: 1
+  noncooking: 0
+
+output_dir: runs

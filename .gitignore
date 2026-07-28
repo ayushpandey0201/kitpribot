@@ -1,37 +1,47 @@
-# Virtual environment
+# ── Python / env ──────────────────────────────────────────────
 venv/
 .venv/
 env/
-
-# Python caching
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.egg-info/
 
-# Large files / Model checkpoints
-*.pt
-*.pth
-*.ckpt
-best_ckpt.pt
-
-# Local downloads / Audio files
-*.wav
-*.mp3
-*.ogg
-*.m4a
-*.flac
-
-# Samsung deliverable working folders (separate repo)
-samsung_results/
-kitpri_v4_submission/
-
-# OS specific files
+# ── OS ────────────────────────────────────────────────────────
 .DS_Store
 .DS_Store?
 ehthumbs.db
 Thumbs.db
 
-# Runtime logs (contain bot token in API URLs)
+# ── Secrets / runtime logs (token appears in httpx URLs) ─────
 *.log
 nohup.out
+.env
+
+# ── Checkpoints: block by default, allow ONLY the two shipped
+#    student models (8.5 MB + 2.9 MB, both under GitHub limits).
+#    The AST teacher (~329 MiB) must NEVER be committed. ───────
+*.pt
+*.pth
+*.ckpt
+!inference/student_mobilenet_fp32.pt
+!inference/student_mobilenet_int8_scripted.pt
+best_model.pt
+*teacher*.pt
+
+# ── Dataset audio — remote (Kaggle), never committed ──────────
+*.wav
+*.mp3
+*.ogg
+*.m4a
+*.flac
+audio_32k/
+data/
+kitpri_v4_build/
+
+# ── Local artifact archive (incl. 329 MB teacher) ─────────────
+samsung_results/
+
+# ── Training run outputs ──────────────────────────────────────
+runs/

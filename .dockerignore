@@ -1,0 +1,15 @@
+# Keep the Docker build context small — inference needs only
+# requirements.txt + inference/ (see Dockerfile COPY directives).
+venv/
+.git/
+samsung_results/
+results/
+docs/
+telegram_bot/
+training/
+scripts/
+configs/
+src/
+__pycache__/
+*.log
+.DS_Store

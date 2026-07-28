@@ -1,0 +1,8 @@
+# AST teacher - HuggingFace ASTForAudioClassification, 86.2M params.
+# Reference run: results/kitpri_v4_ast_diagnostic (test F1 0.8129, AUC 0.8976).
+# Checkpoint is ~329 MiB - never committed; training runs on Kaggle.
+model:
+  name: ast
+  num_classes: 1             # single logit; sigmoid(logit) = P(cooking)
+  pretrained_id: MIT/ast-finetuned-audioset-10-10-0.4593
+  threshold: 0.5             # teacher was evaluated at default threshold

@@ -1,0 +1,21 @@
+# Distillation experiment: AST teacher -> MobileNetV2 student. Runs on Kaggle.
+include:
+  - ../base.yaml
+  - ../audio/mel_32k_10s.yaml
+  - ../models/mobilenetv2_student.yaml
+
+distillation:
+  teacher_checkpoint: runs/ast/ast_teacher.pt
+  # Verified hyperparameters from results/kitpri_v4_distilled_mobilenet/run_summary.json:
+  temperature: 3.0
+  alpha: 0.4
+
+training:
+  epochs: 30
+  batch_size: 32
+  lr: 3.0e-4
+  weight_decay: 0.01
+  scheduler: cosine
+  early_stopping_patience: 6
+  monitor: val_f1
+  # Reference outcome: best epoch 8, early stopped at 14.

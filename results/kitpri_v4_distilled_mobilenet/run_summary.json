@@ -1,0 +1,20 @@
+{
+  "run_name": "kitpri_v4_distilled_mobilenet",
+  "teacher_run": "kitpri_v4_ast_diagnostic",
+  "temperature": 3.0,
+  "alpha": 0.4,
+  "best_epoch": 8,
+  "best_val_f1": 0.7662337662337663,
+  "total_epochs_run": 14,
+  "early_stopped": true,
+  "test_accuracy": 0.7355555555555555,
+  "test_f1": 0.7226107226107226,
+  "test_precision": 0.7598039215686274,
+  "test_recall": 0.6888888888888889,
+  "test_auc": 0.8017975308641975,
+  "train_val_f1_gap_at_best_epoch": 0.12731614702912597,
+  "student_params": 2225153,
+  "num_train": 6300,
+  "num_val": 450,
+  "num_test": 450
+}
