@@ -24,8 +24,7 @@ from telegram.ext import (
     filters,
 )
 
-from model_v4 import load_model
-from inference_v4 import classify
+from kitpri.inference import Predictor
 
 
 # ── Logging ───────────────────────────────────────────────────────────────────
@@ -46,9 +45,7 @@ def get_device() -> torch.device:
 
 
 # ── Globals (set at startup) ──────────────────────────────────────────────────
-MODEL = None
-DEVICE = None
-THRESHOLD = 0.44
+PREDICTOR: Predictor | None = None
 
 
 # ── Handlers ─────────────────────────────────────────────────────────────────
@@ -103,16 +100,15 @@ async def handle_audio(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         await tg_file.download_to_drive(tmp_path)
         logger.info(f"Downloaded audio to {tmp_path} ({os.path.getsize(tmp_path)} bytes)")
 
-        result = classify(tmp_path, MODEL, DEVICE, threshold=THRESHOLD)
-        label = result["label"]
+        result = PREDICTOR.predict_file(tmp_path)
 
-        if label == "Cooking":
+        if result["prediction"] == "Cooking":
             reply = "🍳 *Cooking*"
         else:
             reply = "🔇 *Not Cooking*"
 
         await message.reply_text(reply, parse_mode="Markdown")
-        logger.info(f"Classified: {label} (p={result['prob']:.3f})")
+        logger.info(f"Classified: {result['prediction']} (p={result['probability']:.3f})")
 
     except Exception as e:
         logger.exception("Inference error")
@@ -132,27 +128,29 @@ async def fallback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
-    global MODEL, DEVICE, THRESHOLD
+    global PREDICTOR
 
     parser = argparse.ArgumentParser(description="Kitchen Audio Telegram Bot")
     parser.add_argument("--token", default=os.environ.get("TELEGRAM_BOT_TOKEN"),
                         help="Telegram Bot Token (or set TELEGRAM_BOT_TOKEN env var)")
     parser.add_argument("--ckpt", default="kitpri_v4_submission/inference/student_mobilenet_fp32.pt",
                         help="Path to the KitPri v4 FP32 student checkpoint")
-    parser.add_argument("--threshold", type=float, default=0.44,
-                        help="Probability threshold for Cooking class (default: 0.44, tuned on v4 validation set)")
+    parser.add_argument("--config", default="kitpri_v4_submission/configs/experiments/distill.yaml",
+                        help="kitpri experiment config (audio profile + per-model threshold)")
+    parser.add_argument("--threshold", type=float, default=None,
+                        help="Override the config threshold (default: from config, 0.44)")
     args = parser.parse_args()
 
     if not args.token:
         parser.error("provide --token or set TELEGRAM_BOT_TOKEN")
 
-    THRESHOLD = args.threshold
-
-    # Load model once at startup
-    DEVICE = get_device()
-    logger.info(f"Using device: {DEVICE}")
-    MODEL = load_model(args.ckpt, DEVICE)
-    logger.info("Model loaded and ready.")
+    # Unified kitpri Predictor — the SAME code path as scripts/predict.py and
+    # evaluation, so bot preprocessing can never drift from training.
+    device = get_device()
+    logger.info(f"Using device: {device}")
+    PREDICTOR = Predictor(args.ckpt, config_path=args.config,
+                          threshold=args.threshold, device=str(device))
+    logger.info(f"Model loaded and ready (threshold={PREDICTOR.threshold}).")
 
     # Build application
     app = Application.builder().token(args.token).build()
