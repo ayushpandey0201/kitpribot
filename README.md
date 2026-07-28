@@ -34,6 +34,11 @@ A live end-to-end demo (send a voice message, get 🍳/🔇 back) lives in
 [`telegram_bot/`](telegram_bot/README.md) — same `kitpri` Predictor, same
 model, same threshold.
 
+### Demo video
+
+Video demonstration of the working implementation:
+[`docs/demo/KitPri_v4_Demo.mp4`](docs/demo/KitPri_v4_Demo.mp4)
+
 ### Docker (no local Python setup needed)
 
 ```bash
