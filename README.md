@@ -2,17 +2,47 @@
 
 **Samsung PRISM · Worklet ID 25ST31BMS · B.M.S. College of Engineering**
 
-Binary audio classification (**Cooking** vs. **Not Cooking**) on short audio clips,
-compressed to run on a Samsung SmartThings edge device within a ~60 MB RAM budget.
+![Python](https://img.shields.io/badge/python-3.10%2B-blue) ![PyTorch](https://img.shields.io/badge/pytorch-2.1%2B-orange) ![Model](https://img.shields.io/badge/INT8%20student-2.8%20MB-success) ![Compression](https://img.shields.io/badge/compression-118%C3%97-informational)
+
+Binary audio classification (**Cooking** vs. **Not Cooking**) on 10-second audio
+clips, distilled and quantized from a 329 MiB AST transformer down to a **2.8 MB
+INT8 MobileNetV2** so it fits a Samsung SmartThings edge device (~60 MB RAM budget).
+
+| | |
+|---|---|
+| 🎯 **Task** | Cooking / Not-Cooking from raw audio (any format, any length) |
+| 🧠 **Pipeline** | AST teacher → knowledge distillation → MobileNetV2 student → static INT8 PTQ |
+| 📦 **Deployed artifact** | 2.8 MB TorchScript, 25.5 ms/clip on x86 CPU |
+| 🤖 **Live demo** | [Telegram bot](telegram_bot/README.md) · [demo video](docs/demo/KitPri_v4_Demo.mp4) |
+
+## Architecture
+
+![Architecture diagram](docs/architecture_diagram.png)
+
+## Table of Contents
+
+1. [Quick Start](#1-quick-start-fastest-path-for-reviewers)
+2. [Inference Script Options](#2-inference-script-options)
+3. [Results](#3-results)
+4. [Method](#4-method)
+5. [Known Limitations](#5-known-limitations)
+6. [Repository Structure](#6-repository-structure)
+7. [References](#7-references)
+8. [Reproducing Training](#8-reproducing-training)
 
 ---
 
 ## 1. Quick Start (fastest path for reviewers)
 
+**Prerequisites:** Python ≥ 3.10, pip. (ffmpeg only if you run the Telegram bot.)
+
 ```bash
-git clone <this-repo>
-cd <this-repo>
-pip install -r requirements.txt
+git clone https://github.ecodesamsung.com/ayushpandey-ad23/kitpri.git
+cd kitpri
+
+python3 -m venv venv && source venv/bin/activate
+pip install --extra-index-url https://download.pytorch.org/whl/cpu -r requirements.txt
+
 python inference/predict.py --audio path/to/your_clip.wav
 ```
 
@@ -30,9 +60,15 @@ That is the whole demo — no training, no dataset download, no config editing.
 
 ### Telegram bot demo
 
-A live end-to-end demo (send a voice message, get 🍳/🔇 back) lives in
-[`telegram_bot/`](telegram_bot/README.md) — same `kitpri` Predictor, same
-model, same threshold.
+A live end-to-end demo (send a voice message, get 🍳/🔇 back) — same `kitpri`
+Predictor, same model, same threshold as `predict.py`:
+
+```bash
+echo 'TELEGRAM_BOT_TOKEN=<token from @BotFather>' > .env   # one-time, gitignored
+telegram_bot/start.sh          # start · stop · status · log
+```
+
+Full instructions: [`telegram_bot/README.md`](telegram_bot/README.md).
 
 ### Demo video
 
@@ -101,12 +137,16 @@ Test set: 450 clips, perfectly balanced (225 cooking / 225 non-cooking).
 
 ### AST teacher — test confusion matrix
 
+![AST teacher confusion matrix](results/kitpri_v4_ast_diagnostic/confusion_matrix_ast_teacher.png)
+
 |  | pred: non-cooking | pred: cooking |
 |---|---|---|
 | **true: non-cooking** | 193 | 32 |
 | **true: cooking** | 49 | 176 |
 
 ### Distilled student (FP32) — test confusion matrix @ threshold 0.50
+
+![MobileNetV2 student confusion matrix](results/kitpri_v4_distilled_mobilenet/confusion_matrix_mobilenetv2_student.png)
 
 |  | pred: non-cooking | pred: cooking |
 |---|---|---|
@@ -240,26 +280,42 @@ Reported openly rather than omitted:
 
 ```
 .
-├── README.md
-├── Dockerfile
-├── requirements.txt
-├── .gitignore
+├── README.md                                   # you are here
+├── Dockerfile / .dockerignore                  # linux/amd64 inference container
+├── requirements.txt                            # inference + bot deps (CPU torch)
+├── pyproject.toml                              # `kitpri` package + extras (timm/ast/datagen)
+├── configs/                                    # single source of truth for all constants
+│   ├── base.yaml                               # seed, device, paths
+│   ├── audio/mel_32k_10s.yaml                  # 32 kHz / 10 s / 128-mel profile
+│   ├── models/                                 # ast_teacher · mobilenetv2_student · efficientnet_b0
+│   └── experiments/                            # train_teacher · distill · quantize
+├── src/kitpri/                                 # installable package (pip install -e .)
+│   ├── audio/                                  # io + mel-spectrogram features
+│   ├── data/                                   # dataset + synthesis
+│   ├── models/                                 # registry: ast · mobilenet · base
+│   ├── training/  eval/  deploy/               # loops · metrics/threshold · export/quantize
+│   └── inference/predictor.py                  # the one Predictor used everywhere
+├── scripts/                                    # thin CLIs over the package
 ├── inference/
 │   ├── predict.py                              # demo / inference entry point
-│   ├── student_mobilenet_int8_scripted.pt      # 2.9 MB TorchScript (default)
+│   ├── student_mobilenet_int8_scripted.pt      # 2.8 MB TorchScript (default)
 │   └── student_mobilenet_fp32.pt               # 8.5 MB FP32 student
 ├── training/
-│   ├── dataset_creation.py                     # regenerates the v4 dataset
+│   ├── dataset_creation.py                     # regenerates the v4 dataset (seed 1337)
 │   ├── train_ast.py                            # teacher training
 │   ├── distill_mobilenet.py                    # distillation
 │   └── quantize.py                             # static INT8 PTQ
 ├── results/
-│   ├── kitpri_v4_ast_diagnostic/
-│   └── kitpri_v4_distilled_mobilenet/
+│   ├── kitpri_v4_ast_diagnostic/               # teacher metrics + confusion matrix
+│   └── kitpri_v4_distilled_mobilenet/          # student metrics, threshold sweep, quantization report
+├── telegram_bot/
+│   ├── bot.py · start.sh                       # live demo bot + one-command launcher
+│   └── README.md
 └── docs/
     ├── architecture_diagram.png
-    ├── End_Review.pptx
-    └── reports/                                # weekly / monthly connect reports
+    ├── KitPri_v4_Report.pdf
+    ├── demo/KitPri_v4_Demo.mp4                 # video demonstration
+    └── reports/                                # kickoff + monthly connect decks (indexed README inside)
 ```
 
 > The AST teacher checkpoint (~329 MiB) is **not** committed — it exceeds
@@ -283,10 +339,18 @@ Reported openly rather than omitted:
 
 ## 8. Reproducing Training
 
+Each stage is a config-driven script; constants live in `configs/`, code in
+`src/kitpri/`. Install the package first:
+
+```bash
+pip install -e .                 # core (inference)
+pip install -e '.[datagen]'      # + librosa/pandas for the dataset builder
+pip install -e '.[ast]'          # + transformers for teacher training
+```
+
 ```bash
 # 1. Regenerate the dataset (or download it from the Kaggle link in section 4.1)
 #    Requires the raw_sources soundbank; seed 1337 reproduces the published build.
-pip install 'kitpri[datagen]'
 python training/dataset_creation.py --soundbank /path/to/raw_sources --out kitpri_v4_build
 
 # 2. Train the AST teacher
