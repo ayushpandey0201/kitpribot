@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
-Regenerate the v4 synthetic dataset (runs on Kaggle; requires the soundbank).
+Regenerate the v4 synthetic dataset (requires the raw_sources soundbank).
 
     python scripts/create_dataset.py --config configs/base.yaml --seed 42
 
-STATUS: delegates to kitpri.data.synthesis, which is an honest stub until the
-Kaggle notebook's mixing code is ported. Seeding is mandatory so regeneration
-is byte-identical to the clips behind the reported metrics.
+STATUS: delegates to kitpri.data.synthesis, which is an honest stub — the
+WORKING generator is training/dataset_creation.py (the original script that
+built the published dataset; use that one). Seeding is mandatory so
+regeneration is byte-identical to the clips behind the reported metrics.
 """
 
 import argparse

@@ -6,6 +6,8 @@ include:
   - ../models/mobilenetv2_student.yaml
 
 distillation:
+  # NOT committed (329 MB > GitHub limit): retrain via training/train_ast.py
+  # or copy from the Modal kitpri-checkpoints volume (kitpri_v4_ast_diagnostic/best_model.pt).
   teacher_checkpoint: runs/ast/ast_teacher.pt
   # Verified hyperparameters from results/kitpri_v4_distilled_mobilenet/run_summary.json:
   temperature: 3.0

@@ -17,7 +17,7 @@ here is its final evolution, which switched to LoRA adapters as a follow-up
 experiment (RUN_NAME kitpri_v4_ast_lora).
 
 Usage:
-    modal run train_ast_v4.py
+    modal run training/train_ast.py
 """
 
 import modal

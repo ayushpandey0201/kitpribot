@@ -34,6 +34,15 @@ INT8 MobileNetV2** so it fits a Samsung SmartThings edge device (~60 MB RAM budg
 
 ## 1. Quick Start (fastest path for reviewers)
 
+**New to the repo? Pick your entry point:**
+
+| You want to… | Go to | Notes |
+| --- | --- | --- |
+| Try the model on an audio clip | [`inference/predict.py`](inference/predict.py) | zero setup beyond pip; models are committed |
+| Use/extend the codebase | [`src/kitpri/`](src/kitpri) + [`scripts/`](scripts) | installable package + thin config-driven CLIs |
+| See how the shipped models were trained | [`training/`](training) | the original Modal cloud scripts, kept as provenance |
+| Demo it to someone | [`telegram_bot/`](telegram_bot) | live 24/7 — message the bot, or run your own |
+
 **Prerequisites:** Python ≥ 3.10, pip. (ffmpeg only if you run the Telegram bot.)
 
 ```bash
@@ -61,7 +70,9 @@ That is the whole demo — no training, no dataset download, no config editing.
 ### Telegram bot demo
 
 A live end-to-end demo (send a voice message, get 🍳/🔇 back) — same `kitpri`
-Predictor, same model, same threshold as `predict.py`.
+Predictor and threshold (0.44) as `predict.py`. Note the bot runs the **FP32**
+student, while `predict.py` defaults to INT8 (`--model fp32` matches the bot
+exactly).
 
 **The bot is already live 24/7**: it runs as a systemd service on an Oracle
 Cloud Always-Free VM (long polling — no inbound ports, $0/month), so
@@ -362,10 +373,13 @@ pip install -e '.[ast]'          # + transformers for teacher training
 #    Requires the raw_sources soundbank; seed 1337 reproduces the published build.
 python training/dataset_creation.py --soundbank /path/to/raw_sources --out kitpri_v4_build
 
-# 2–4. The exact original cloud training scripts (Modal; expect volumes
-#      kitpri-v4-data / kitpri-checkpoints). These are the scripts that
-#      produced the committed results/ artifacts — kept as provenance.
+# 2–4. The original cloud training scripts (Modal; expect volumes
+#      kitpri-v4-data / kitpri-checkpoints), kept as provenance.
+#      distill + quantize are exactly the runs behind results/; train_ast.py is
+#      preserved in its final (LoRA follow-up) form — the committed teacher came
+#      from its earlier full fine-tune configuration (see the file header).
 modal run training/train_ast.py           # AST teacher
 modal run training/distill_mobilenet.py   # distillation (T=3.0, α=0.4)
-modal run training/quantize.py            # static INT8 PTQ (fbgemm, 500-clip calibration)
+modal run training/quantize.py            # static INT8 PTQ (500-clip calibration; original run
+                                          # used fbgemm/x86 — configs now default to qnnpack for ARM)
 ```

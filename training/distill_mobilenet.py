@@ -11,7 +11,7 @@ where soft_label_from_teacher = sigmoid(teacher_logits / T)
 This matches the same recipe used successfully in v2 (T=3.0, alpha=0.4).
 
 Usage:
-    modal run distill_ast_to_mobilenet_v4.py
+    modal run training/distill_mobilenet.py
 """
 
 import modal

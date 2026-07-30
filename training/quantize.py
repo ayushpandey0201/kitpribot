@@ -19,7 +19,7 @@ Steps:
 6. Export INT8 model + report file size
 
 Usage:
-    modal run quantize_student_v4.py
+    modal run training/quantize.py
 """
 
 import modal
