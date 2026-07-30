@@ -1,4 +1,5 @@
-# Distillation experiment: AST teacher -> MobileNetV2 student. Runs on Kaggle.
+# Distillation experiment: AST teacher -> MobileNetV2 student.
+# Original run: Modal A10G (training/distill_mobilenet.py).
 include:
   - ../base.yaml
   - ../audio/mel_32k_10s.yaml
@@ -12,10 +13,13 @@ distillation:
 
 training:
   epochs: 30
-  batch_size: 32
+  batch_size: 16          # verified from training/distill_mobilenet.py (teacher forward runs alongside)
   lr: 3.0e-4
-  weight_decay: 0.01
+  weight_decay: 1.0e-4    # verified from training/distill_mobilenet.py
   scheduler: cosine
   early_stopping_patience: 6
   monitor: val_f1
+  spec_augment:           # train-time only
+    freq_mask_param: 27
+    time_mask_param: 80
   # Reference outcome: best epoch 8, early stopped at 14.

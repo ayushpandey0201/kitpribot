@@ -269,15 +269,16 @@ was adopted as the teacher.
 \toprule
  & \textbf{Teacher (AST)} & \textbf{Student (distill)} & \textbf{Quantization} \\
 \midrule
-Max epochs / batch     & 20 / 16        & 30 / 32       & --- \\
-LR / weight decay      & $10^{-4}$ / 0.01 & $3{\cdot}10^{-4}$ / 0.01 & --- \\
+Max epochs / batch     & 20 / 16        & 30 / 16       & --- \\
+LR / weight decay      & $10^{-4}$ / 0.01 & $3{\cdot}10^{-4}$ / $10^{-4}$ & --- \\
 Schedule               & cosine         & cosine        & --- \\
 Early stop (patience)  & val F1 (5)     & val F1 (6)    & --- \\
 Outcome                & best epoch 1, stop @ 6 & best epoch 8, stop @ 14 & 500 calib.\ clips \\
 \bottomrule
 \end{tabular}
-\caption{Training configuration (from \texttt{configs/experiments/*.yaml};
-outcomes from \texttt{run\_summary.json}).}
+\caption{Training configuration (verified from the original training scripts
+in \texttt{training/} and \texttt{configs/experiments/*.yaml}; outcomes from
+\texttt{run\_summary.json}).}
 \label{tab:hyper}
 \end{table}
 
@@ -304,8 +305,11 @@ $T{=}3.0$ and $\alpha{=}0.4$, the loss implemented in
 i.e.\ \emph{$\alpha$ weights the hard-label term}; the $T^2$ factor restores
 gradient magnitude for the temperature-softened term
 \cite{hinton2015distilling}. We state this convention explicitly because
-$\alpha$'s role is inconsistent across the literature; the codebase documents
-it as a flagged assumption rather than a silent choice.
+$\alpha$'s role is inconsistent across the literature; it is verified directly
+against the original training script
+(\texttt{training/distill\_mobilenet.py}). Training-time SpecAugment
+(frequency masking up to 27 mel bins, time masking up to 80 frames)
+regularizes the student; no masking is applied at evaluation.
 
 The student's generalization gap at its best epoch
 (train$-$val F1 $= 0.127$) is markedly healthier than the teacher's

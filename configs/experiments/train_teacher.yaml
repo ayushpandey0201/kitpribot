@@ -1,4 +1,5 @@
-# Teacher training experiment. Runs on Kaggle (data is remote).
+# Teacher training experiment.
+# Original run: Modal A10G (training/train_ast.py); data in the kitpri-v4-data volume.
 include:
   - ../base.yaml
   - ../audio/mel_32k_10s.yaml

@@ -362,12 +362,10 @@ pip install -e '.[ast]'          # + transformers for teacher training
 #    Requires the raw_sources soundbank; seed 1337 reproduces the published build.
 python training/dataset_creation.py --soundbank /path/to/raw_sources --out kitpri_v4_build
 
-# 2. Train the AST teacher
-python training/train_ast.py
-
-# 3. Distil into MobileNetV2
-python training/distill_mobilenet.py
-
-# 4. Quantize to INT8
-python training/quantize.py
+# 2–4. The exact original cloud training scripts (Modal; expect volumes
+#      kitpri-v4-data / kitpri-checkpoints). These are the scripts that
+#      produced the committed results/ artifacts — kept as provenance.
+modal run training/train_ast.py           # AST teacher
+modal run training/distill_mobilenet.py   # distillation (T=3.0, α=0.4)
+modal run training/quantize.py            # static INT8 PTQ (fbgemm, 500-clip calibration)
 ```

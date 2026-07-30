@@ -3,12 +3,10 @@ Knowledge distillation loss (teacher -> student), single-logit binary variant.
 
 Verified v4 hyperparameters (run_summary.json): temperature=3.0, alpha=0.4.
 
-ASSUMPTION — flagged, not silently decided: alpha is taken to weight the
-HARD-label term (common convention):
+CONVENTION VERIFIED against the original training script
+(training/distill_mobilenet.py): alpha weights the HARD-label term:
     loss = alpha * BCE(student_logit, hard_label)
          + (1 - alpha) * T^2 * BCE(student_logit / T, sigmoid(teacher_logit / T))
-The original Kaggle notebook is the authority; when training/ is ported,
-verify the convention matches and correct here if it differs.
 """
 
 from __future__ import annotations
