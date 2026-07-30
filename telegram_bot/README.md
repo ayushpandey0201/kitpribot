@@ -7,8 +7,10 @@ Runs the **FP32 MobileNetV2 student** (threshold 0.44) through the unified
 `kitpri.inference.Predictor` — the exact same preprocessing and model code as
 `inference/predict.py`, so the bot cannot drift from the evaluated pipeline.
 
-> **Hosting it 24/7 in the cloud** (so it works while your laptop is closed):
-> see [DEPLOY.md](DEPLOY.md) — Oracle Always Free VM + systemd, $0/month.
+> **The bot is live 24/7 in the cloud** — it runs on an Oracle Always-Free VM
+> under systemd, so `@kitpribot` answers even when every laptop is closed.
+> Setup below is only needed to run your *own* instance; hosting details are
+> in [Cloud hosting](#cloud-hosting--how-the-live-bot-runs) and [DEPLOY.md](DEPLOY.md).
 
 ## Setup (from the repo root)
 
@@ -60,6 +62,39 @@ Long polling — no ngrok, webhooks, or port forwarding needed.
 | `--ckpt`      | `inference/student_mobilenet_fp32.pt` | model checkpoint                    |
 | `--config`    | `configs/experiments/distill.yaml`    | audio profile + per-model threshold |
 | `--threshold` | from config (0.44)                    | override decision threshold         |
+
+## Cloud hosting — how the live bot runs
+
+The production instance runs on an **Oracle Cloud Always-Free VM** at $0/month
+(deployed 30 Jul 2026). Because the bot uses **long polling** (outbound HTTPS
+only), the VM needs no public URL, webhook, TLS certificate, or open inbound
+port.
+
+| Component | Detail |
+| --- | --- |
+| VM | VM.Standard.E2.1.Micro — 1 OCPU x86, 1 GB RAM — `ap-hyderabad-1` |
+| OS / runtime | Ubuntu 24.04 · Python 3.12 venv · CPU-only torch |
+| Memory | +2 GB swapfile (1 GB RAM alone is too tight for torch + model) |
+| Model | FP32 MobileNetV2 student, threshold 0.44, CPU (≈7 s load, ≈670 MB steady) |
+| Supervision | systemd [`kitpri-bot.service`](kitpri-bot.service): `Restart=always`, enabled at boot, `TimeoutStopSec=15` (PTB can hang on SIGTERM) |
+| Secrets | `.env` (mode 600) delivered via `scp`, injected with systemd `EnvironmentFile` — never committed, never in argv |
+
+Day-2 operations (from any machine with the deploy key):
+
+```bash
+ssh kitpri-vm systemctl status kitpri-bot     # health
+ssh kitpri-vm journalctl -u kitpri-bot -f     # live logs
+ssh kitpri-vm 'cd kitpri && git pull && sudo systemctl restart kitpri-bot'   # deploy update
+```
+
+Full from-scratch instructions (VM creation → swap → install → systemd →
+troubleshooting): **[DEPLOY.md](DEPLOY.md)**.
+
+> ⚠️ **One poller per token.** Telegram rejects concurrent `getUpdates`
+> consumers (HTTP 409). While the cloud bot is running, do not start a local
+> instance with the same token — stop one side first
+> (`telegram_bot/start.sh stop` locally, or `sudo systemctl stop kitpri-bot`
+> on the VM).
 
 ## Notes
 

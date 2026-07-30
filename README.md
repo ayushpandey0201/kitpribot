@@ -8,12 +8,12 @@ Binary audio classification (**Cooking** vs. **Not Cooking**) on 10-second audio
 clips, distilled and quantized from a 329 MiB AST transformer down to a **2.8 MB
 INT8 MobileNetV2** so it fits a Samsung SmartThings edge device (~60 MB RAM budget).
 
-| | |
-|---|---|
-| 🎯 **Task** | Cooking / Not-Cooking from raw audio (any format, any length) |
-| 🧠 **Pipeline** | AST teacher → knowledge distillation → MobileNetV2 student → static INT8 PTQ |
-| 📦 **Deployed artifact** | 2.8 MB TorchScript, 25.5 ms/clip on x86 CPU |
-| 🤖 **Live demo** | [Telegram bot](telegram_bot/README.md) · [demo video](docs/demo/KitPri_v4_Demo.mp4) |
+|                          |                                                                                     |
+| ------------------------ | ----------------------------------------------------------------------------------- |
+| 🎯 **Task**              | Cooking / Not-Cooking from raw audio (any format, any length)                       |
+| 🧠 **Pipeline**          | AST teacher → knowledge distillation → MobileNetV2 student → static INT8 PTQ        |
+| 📦 **Deployed artifact** | 2.8 MB TorchScript, 25.5 ms/clip on x86 CPU                                         |
+| 🤖 **Live demo**         | [@kitpribot on Telegram](telegram_bot/README.md) — hosted 24/7 on Oracle Cloud (free tier), message it anytime · [demo video](docs/demo/KitPri_v4_Demo.mp4) |
 
 ## Architecture
 
@@ -61,7 +61,16 @@ That is the whole demo — no training, no dataset download, no config editing.
 ### Telegram bot demo
 
 A live end-to-end demo (send a voice message, get 🍳/🔇 back) — same `kitpri`
-Predictor, same model, same threshold as `predict.py`:
+Predictor, same model, same threshold as `predict.py`.
+
+**The bot is already live 24/7**: it runs as a systemd service on an Oracle
+Cloud Always-Free VM (long polling — no inbound ports, $0/month), so
+`@kitpribot` answers even when no developer machine is online. Deployment is
+reproducible from [`telegram_bot/DEPLOY.md`](telegram_bot/DEPLOY.md) +
+[`telegram_bot/kitpri-bot.service`](telegram_bot/kitpri-bot.service).
+
+To run your **own** instance locally instead (requires your own token, since
+only one poller per token is allowed):
 
 ```bash
 echo 'TELEGRAM_BOT_TOKEN=<token from @BotFather>' > .env   # one-time, gitignored
@@ -103,13 +112,13 @@ python inference/predict.py --audio sample.wav --threshold 0.50
 python inference/predict.py --audio sample.wav --json
 ```
 
-| Flag | Default | Description |
-|---|---|---|
-| `--audio` | — | Path to one audio file |
-| `--audio_dir` | — | Directory of audio files (batch mode) |
-| `--model` | `int8` | `int8` (2.9 MB, TorchScript) or `fp32` (8.5 MB, needs timm) |
-| `--threshold` | `0.44` | Decision threshold, tuned on the validation set |
-| `--json` | off | Emit JSON instead of a text table |
+| Flag          | Default | Description                                                 |
+| ------------- | ------- | ----------------------------------------------------------- |
+| `--audio`     | —       | Path to one audio file                                      |
+| `--audio_dir` | —       | Directory of audio files (batch mode)                       |
+| `--model`     | `int8`  | `int8` (2.9 MB, TorchScript) or `fp32` (8.5 MB, needs timm) |
+| `--threshold` | `0.44`  | Decision threshold, tuned on the validation set             |
+| `--json`      | off     | Emit JSON instead of a text table                           |
 
 Input audio may be any sample rate, length, or channel count — the script
 resamples to 32 kHz, downmixes to mono, and pads/truncates to 10.0 seconds.
@@ -123,12 +132,12 @@ resamples to 32 kHz, downmixes to mono, and pads/truncates to 10.0 seconds.
 
 ## 3. Results
 
-| Stage | Model | Params | Size | Test F1 | Test Acc | CPU latency |
-|---|---|---|---|---|---|---|
-| Teacher | AST (HF `ASTForAudioClassification`) | 86.2 M | ~329 MiB | **0.8129** | 0.8200 | — |
-| Student (FP32) | MobileNetV2 (`timm`) | 2.23 M | 8.49 MB | 0.7226 @ thr 0.50 | 0.7356 | 57.3 ms/clip |
-| Student (FP32, tuned) | MobileNetV2 | 2.23 M | 8.49 MB | **0.7318** @ thr 0.44 | 0.7378 | 57.3 ms/clip |
-| Student (INT8) | MobileNetV2 static PTQ | 2.23 M | **2.80 MB** | 0.6910 @ thr 0.50 | 0.7178 | **25.5 ms/clip** |
+| Stage                 | Model                                | Params | Size        | Test F1               | Test Acc | CPU latency      |
+| --------------------- | ------------------------------------ | ------ | ----------- | --------------------- | -------- | ---------------- |
+| Teacher               | AST (HF `ASTForAudioClassification`) | 86.2 M | ~329 MiB    | **0.8129**            | 0.8200   | —                |
+| Student (FP32)        | MobileNetV2 (`timm`)                 | 2.23 M | 8.49 MB     | 0.7226 @ thr 0.50     | 0.7356   | 57.3 ms/clip     |
+| Student (FP32, tuned) | MobileNetV2                          | 2.23 M | 8.49 MB     | **0.7318** @ thr 0.44 | 0.7378   | 57.3 ms/clip     |
+| Student (INT8)        | MobileNetV2 static PTQ               | 2.23 M | **2.80 MB** | 0.6910 @ thr 0.50     | 0.7178   | **25.5 ms/clip** |
 
 Compression: **329 MiB → 8.49 MB (38×) via distillation → 2.80 MB (118× total) via INT8 quantization.**
 INT8 inference is **2.25× faster** than FP32 on CPU.
@@ -139,19 +148,19 @@ Test set: 450 clips, perfectly balanced (225 cooking / 225 non-cooking).
 
 ![AST teacher confusion matrix](results/kitpri_v4_ast_diagnostic/confusion_matrix_ast_teacher.png)
 
-|  | pred: non-cooking | pred: cooking |
-|---|---|---|
-| **true: non-cooking** | 193 | 32 |
-| **true: cooking** | 49 | 176 |
+|                       | pred: non-cooking | pred: cooking |
+| --------------------- | ----------------- | ------------- |
+| **true: non-cooking** | 193               | 32            |
+| **true: cooking**     | 49                | 176           |
 
 ### Distilled student (FP32) — test confusion matrix @ threshold 0.50
 
 ![MobileNetV2 student confusion matrix](results/kitpri_v4_distilled_mobilenet/confusion_matrix_mobilenetv2_student.png)
 
-|  | pred: non-cooking | pred: cooking |
-|---|---|---|
-| **true: non-cooking** | 176 | 49 |
-| **true: cooking** | 70 | 155 |
+|                       | pred: non-cooking | pred: cooking |
+| --------------------- | ----------------- | ------------- |
+| **true: non-cooking** | 176               | 49            |
+| **true: cooking**     | 70                | 155           |
 
 ---
 
@@ -164,12 +173,12 @@ missed quiet sounds such as electrical hums. v4 was rebuilt so that **every clip
 is a synthetic mixture of 2–4 layered sounds at varying relative volumes**,
 which is substantially more realistic and substantially harder.
 
-| | |
-|---|---|
-| Total clips | 7,200 |
-| Train / Val / Test | 6,300 / 450 / 450 |
-| Clip length | 10.0 s |
-| Cooking sources | 10 organised subtypes |
+|                     |                                     |
+| ------------------- | ----------------------------------- |
+| Total clips         | 7,200                               |
+| Train / Val / Test  | 6,300 / 450 / 450                   |
+| Clip length         | 10.0 s                              |
+| Cooking sources     | 10 organised subtypes               |
 | Non-cooking sources | 1,160-clip pool derived from ESC-50 |
 
 **Dataset:** available on Kaggle — https://www.kaggle.com/datasets/ayushalia/kitpri-v4-dataset
@@ -181,17 +190,17 @@ The dataset itself is **not** committed to this repository. Use
 
 Identical at train and inference time:
 
-| Parameter | Value |
-|---|---|
-| Sample rate | 32,000 Hz |
-| Clip duration | 10.0 s (pad or truncate) |
-| Channels | downmixed to mono |
-| Mel bins (`n_mels`) | 128 |
-| `n_fft` / `hop_length` | 1024 / 512 |
-| dB conversion | `AmplitudeToDB(top_db=80)` |
-| Normalization | **per-clip** `(x - x.mean()) / (x.std() + 1e-6)` |
-| Channel expansion | `.repeat(3, 1, 1)` |
-| Final tensor | `(1, 3, 128, 626)` |
+| Parameter              | Value                                            |
+| ---------------------- | ------------------------------------------------ |
+| Sample rate            | 32,000 Hz                                        |
+| Clip duration          | 10.0 s (pad or truncate)                         |
+| Channels               | downmixed to mono                                |
+| Mel bins (`n_mels`)    | 128                                              |
+| `n_fft` / `hop_length` | 1024 / 512                                       |
+| dB conversion          | `AmplitudeToDB(top_db=80)`                       |
+| Normalization          | **per-clip** `(x - x.mean()) / (x.std() + 1e-6)` |
+| Channel expansion      | `.repeat(3, 1, 1)`                               |
+| Final tensor           | `(1, 3, 128, 626)`                               |
 
 > **Important for anyone porting this pipeline:** there is **no resize to 224×224**
 > and **no fixed ImageNet normalization**. The spectrogram keeps its natural
@@ -210,13 +219,13 @@ filters, beat all six EfficientNet runs within a single epoch, and became the te
 
 ### 4.4 Distillation
 
-| Hyperparameter | Value |
-|---|---|
-| Teacher | `kitpri_v4_ast_diagnostic` (test F1 0.8129) |
-| Student | MobileNetV2 (`mobilenetv2_100`, timm), 2,225,153 params |
-| Temperature | 3.0 |
-| Alpha | 0.4 |
-| Best epoch | 8 of 14 (early-stopped) |
+| Hyperparameter | Value                                                   |
+| -------------- | ------------------------------------------------------- |
+| Teacher        | `kitpri_v4_ast_diagnostic` (test F1 0.8129)             |
+| Student        | MobileNetV2 (`mobilenetv2_100`, timm), 2,225,153 params |
+| Temperature    | 3.0                                                     |
+| Alpha          | 0.4                                                     |
+| Best epoch     | 8 of 14 (early-stopped)                                 |
 
 ### 4.5 Threshold tuning
 
@@ -243,7 +252,7 @@ Reported openly rather than omitted:
 1. **Overlapping-audio clips are the dominant error source.** `clip_type C`
    comprises **17% of all clips** and mixes a cooking sound with a competing
    non-cooking sound at an SNR sampled from **−5 to +20 dB** — meaning the
-   cooking sound can be up to 5 dB *quieter* than the competing sound.
+   cooking sound can be up to 5 dB _quieter_ than the competing sound.
    Accuracy on these drops to roughly **39–50%**, versus **75–78%** on clean
    non-overlapping clips. This difficulty is by design — it reflects the
    real-world messiness the model is intended to handle.
@@ -309,13 +318,14 @@ Reported openly rather than omitted:
 │   ├── kitpri_v4_ast_diagnostic/               # teacher metrics + confusion matrix
 │   └── kitpri_v4_distilled_mobilenet/          # student metrics, threshold sweep, quantization report
 ├── telegram_bot/
-│   ├── bot.py · start.sh                       # live demo bot + one-command launcher
+│   ├── bot.py · start.sh                       # live demo bot + one-command local launcher
+│   ├── DEPLOY.md · kitpri-bot.service          # 24/7 cloud hosting (Oracle free tier + systemd)
 │   └── README.md
 └── docs/
     ├── architecture_diagram.png
     ├── KitPri_v4_Report.pdf
     ├── demo/KitPri_v4_Demo.mp4                 # video demonstration
-    └── reports/                                # kickoff + monthly connect decks (indexed README inside)
+    └── reports/                                # PRISM decks + engineering report (.tex/.pdf), indexed README inside
 ```
 
 > The AST teacher checkpoint (~329 MiB) is **not** committed — it exceeds
@@ -325,11 +335,11 @@ Reported openly rather than omitted:
 
 ## 7. References
 
-| Component | Source |
-|---|---|
+| Component                           | Source                                                                                                                     |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | AST (Audio Spectrogram Transformer) | HuggingFace `ASTForAudioClassification` — https://huggingface.co/docs/transformers/model_doc/audio-spectrogram-transformer |
-| MobileNetV2 | `timm` — https://github.com/huggingface/pytorch-image-models |
-| ESC-50 (non-cooking source audio) | https://github.com/karolpiczak/ESC-50 — **CC BY-NC 3.0 (non-commercial)** |
+| MobileNetV2                         | `timm` — https://github.com/huggingface/pytorch-image-models                                                               |
+| ESC-50 (non-cooking source audio)   | https://github.com/karolpiczak/ESC-50 — **CC BY-NC 3.0 (non-commercial)**                                                  |
 
 > **License note:** the non-cooking clips derive from ESC-50, which is licensed
 > CC BY-NC 3.0. Any downstream commercial use requires sourcing replacement
