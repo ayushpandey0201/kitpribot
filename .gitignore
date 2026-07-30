@@ -48,3 +48,6 @@ runs/
 
 # ── Internal AI-session working docs (local only) ────────────
 docs/IDE_CLAUDE_*.md
+IDE_CLAUDE_HANDOFF.md
+IDE_CLAUDE_MODULARIZE.md
+
