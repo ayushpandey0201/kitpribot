@@ -54,7 +54,17 @@ case "${1:-start}" in
     bootstrap
     exit 0 ;;
   stop)
-    pkill -f "telegram_bot/bot.py" 2>/dev/null && echo "bot stopped" || echo "bot was not running"
+    # PTB can hang on SIGTERM — verify, then escalate to SIGKILL
+    if pkill -f "telegram_bot/bot.py" 2>/dev/null; then
+      for _ in $(seq 1 5); do
+        pgrep -f "telegram_bot/bot.py" >/dev/null || { echo "bot stopped"; exit 0; }
+        sleep 1
+      done
+      pkill -9 -f "telegram_bot/bot.py" 2>/dev/null || true
+      echo "bot stopped (forced)"
+    else
+      echo "bot was not running"
+    fi
     exit 0 ;;
   status)
     pgrep -f "telegram_bot/bot.py" >/dev/null \
@@ -109,7 +119,7 @@ MENU
   1. In Telegram's search bar type:   @BotFather    → open it (blue checkmark)
   2. Send it the message:             /newbot
   3. It asks for a display name  →    My KitPri Test Bot        (anything)
-  4. It asks for a username      →    ayush_kitpri_test_bot     (must end in 'bot',
+  4. It asks for a username      →    classifier_kitpri_test_bot     (must end in 'bot',
                                                                  must be unused)
   5. BotFather replies "Done! …" containing a token that looks like:
 
