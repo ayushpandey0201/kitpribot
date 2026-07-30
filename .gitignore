@@ -45,3 +45,6 @@ samsung_results/
 
 # ── Training run outputs ──────────────────────────────────────
 runs/
+
+# ── Internal AI-session working docs (local only) ────────────
+docs/IDE_CLAUDE_*.md
