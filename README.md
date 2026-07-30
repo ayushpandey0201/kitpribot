@@ -323,7 +323,6 @@ Reported openly rather than omitted:
 │   └── README.md
 └── docs/
     ├── architecture_diagram.png
-    ├── KitPri_v4_Report.pdf
     ├── demo/KitPri_v4_Demo.mp4                 # video demonstration
     └── reports/                                # PRISM decks + engineering report (.tex/.pdf), indexed README inside
 ```
