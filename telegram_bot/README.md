@@ -29,13 +29,29 @@ To bootstrap without starting (e.g. on a fresh server): `./start.sh setup`.
 
 ## Run — the easy way
 
-One-time: create a `.env` file at the repo root (gitignored) containing:
+```bash
+./start.sh
+```
+
+That's the whole flow. On a machine with no token configured, the launcher
+asks what you want:
+
+1. **Run my own local test bot** — it walks you through @BotFather inside the
+   terminal (send `/newbot`, pick a name like `My KitPri Test Bot`, a username
+   like `ayush_kitpri_test_bot`, paste the token when prompted — input is
+   hidden and saved to a private `.env`). Your local bot needs its *own*
+   token: the official one is in use by the 24/7 cloud instance, and Telegram
+   allows one poller per token.
+2. **Model development only** — no bot, no token; it prints the local
+   inference command and the exact steps to ship a new model to the cloud bot.
+
+Already have a token? Put it in `.env` yourself and the menu never appears:
 
 ```
 TELEGRAM_BOT_TOKEN=<token from @BotFather>
 ```
 
-Then:
+Day-to-day commands:
 
 ```bash
 ./start.sh            # start (auto-restarts a running instance)

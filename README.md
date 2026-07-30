@@ -82,11 +82,12 @@ reproducible from [`telegram_bot/DEPLOY.md`](telegram_bot/DEPLOY.md) +
 
 To run your **own** instance locally instead (requires your own token, since
 only one poller per token is allowed) — the launcher **bootstraps everything
-itself** on first run (venv, CPU torch, all deps, the `kitpri` package):
+itself** (venv, CPU torch, deps) and, with no token configured, **guides you
+interactively**: local test bot (with an in-terminal @BotFather walkthrough)
+or model-development-only setup:
 
 ```bash
-echo 'TELEGRAM_BOT_TOKEN=<token from @BotFather>' > .env   # one-time, gitignored
-./start.sh          # first run: full setup + start · also: setup · stop · status · log
+./start.sh          # first run: full setup + guided choice · also: setup · stop · status · log
 ```
 
 Full instructions: [`telegram_bot/README.md`](telegram_bot/README.md).
