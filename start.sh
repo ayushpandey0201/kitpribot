@@ -6,11 +6,11 @@
 # prints the exact steps either way.
 #
 # Usage:
-#   ./start.sh          start (bootstraps + guides first if needed)
+#   ./start.sh          start a LOCAL bot on this machine (bootstraps + guides first if needed)
 #   ./start.sh setup    bootstrap only (venv + deps), don't start
-#   ./start.sh stop     stop the bot
-#   ./start.sh status   is it running?
-#   ./start.sh log      follow the live log
+#   ./start.sh stop     stop the LOCAL bot (same as ./stop.sh; never touches the cloud)
+#   ./start.sh status   is a LOCAL bot running?
+#   ./start.sh log      follow the LOCAL bot's live log
 #
 # Custom model (see telegram_bot/README.md § "Swapping in a new model"):
 #   optionally set in .env —
@@ -54,18 +54,7 @@ case "${1:-start}" in
     bootstrap
     exit 0 ;;
   stop)
-    # PTB can hang on SIGTERM — verify, then escalate to SIGKILL
-    if pkill -f "telegram_bot/bot.py" 2>/dev/null; then
-      for _ in $(seq 1 5); do
-        pgrep -f "telegram_bot/bot.py" >/dev/null || { echo "bot stopped"; exit 0; }
-        sleep 1
-      done
-      pkill -9 -f "telegram_bot/bot.py" 2>/dev/null || true
-      echo "bot stopped (forced)"
-    else
-      echo "bot was not running"
-    fi
-    exit 0 ;;
+    exec ./stop.sh ;;
   status)
     pgrep -f "telegram_bot/bot.py" >/dev/null \
       && echo "bot RUNNING (pid $(pgrep -f 'telegram_bot/bot.py' | tr '\n' ' '))" \
@@ -198,7 +187,23 @@ done
 
 if pgrep -f "telegram_bot/bot.py" >/dev/null; then
   grep -E "Using device|Model loaded" bot.log | sed 's/^/  /'
-  echo "bot RUNNING (pid $(pgrep -f 'telegram_bot/bot.py' | tr '\n' ' ')) — follow with: ./start.sh log"
+  echo "LOCAL bot RUNNING on this machine (pid $(pgrep -f 'telegram_bot/bot.py' | tr '\n' ' ')) — follow with: ./start.sh log"
+  # Same-token clash guard: if another instance (usually the 24/7 CLOUD bot)
+  # already polls this token, Telegram rejects one of them — detect & stand down.
+  sleep 5
+  if grep -q "Conflict" bot.log; then
+    echo ""
+    echo "⚠ CONFLICT: another bot instance is ALREADY polling this token —"
+    echo "  almost certainly the 24/7 cloud bot on the Oracle VM."
+    echo "  Two pollers on one token fight and both drop messages, so this"
+    echo "  LOCAL bot has been stopped again. The cloud bot is unaffected."
+    echo ""
+    echo "  To test locally, use your OWN test bot (separate token):"
+    echo "    1. remove the token line from .env"
+    echo "    2. run ./start.sh — it walks you through @BotFather"
+    ./stop.sh >/dev/null
+    exit 1
+  fi
 else
   echo "bot FAILED to start — last log lines:"
   tail -5 bot.log

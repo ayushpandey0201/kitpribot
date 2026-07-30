@@ -51,15 +51,21 @@ Already have a token? Put it in `.env` yourself and the menu never appears:
 TELEGRAM_BOT_TOKEN=<token from @BotFather>
 ```
 
-Day-to-day commands:
+Day-to-day commands (all of these act on the **local machine only** — the
+cloud bot lives on a different computer and is managed via
+`ssh kitpri-vm 'sudo systemctl …'`):
 
 ```bash
-./start.sh            # start (auto-restarts a running instance)
+./start.sh            # start a LOCAL bot (auto-restarts a running instance)
+./stop.sh             # stop ALL local bot processes — never touches the cloud
 ./start.sh setup     # first-time bootstrap only (venv + deps), no start
-./start.sh status     # is it running?
-./start.sh log        # follow the live log
-./start.sh stop       # stop
+./start.sh status     # is a LOCAL bot running?
+./start.sh log        # follow the LOCAL bot's live log
 ```
+
+If you start a local bot with the **same token** the cloud bot uses, the
+launcher detects the Telegram `Conflict` within seconds, stops the local
+instance automatically, and tells you how to get your own test token.
 
 ## Run — manual
 
