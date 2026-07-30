@@ -165,6 +165,34 @@ fi
 [[ -n "${KITPRI_BOT_CKPT:-}" ]] && echo "using custom checkpoint: $KITPRI_BOT_CKPT"
 [[ -n "${KITPRI_BOT_THRESHOLD:-}" ]] && echo "using custom threshold: $KITPRI_BOT_THRESHOLD"
 
+# ── Production-identity guard ────────────────────────────────────────────────
+# The 24/7 cloud VM owns @kitpribot. Telegram gives a token to the NEWEST
+# poller, so starting that identity here would silently hijack production.
+# Ask Telegram whose token this is and refuse the production identity.
+PROD_BOT_USERNAME="kitpribot"
+tok_user=$(curl -sm 5 "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getMe" 2>/dev/null \
+           | sed -n 's/.*"username":"\([^"]*\)".*/\1/p') || true
+if [[ "${tok_user:-}" == "$PROD_BOT_USERNAME" && "${KITPRI_FORCE_PROD:-}" != "1" ]]; then
+  cat <<'GUARD'
+
+✗ REFUSING to start: the token in .env belongs to @kitpribot — the PRODUCTION
+  bot that runs 24/7 on the Oracle VM. Starting it here would steal polling
+  from the cloud (Telegram always favors the newest poller) and users' messages
+  would land on this laptop instead.
+
+  For local testing, use your OWN test bot:
+    1. remove the TELEGRAM_BOT_TOKEN line from .env
+    2. run ./start.sh — it walks you through creating one with @BotFather
+
+  (Deliberately taking over production from this machine requires:
+     KITPRI_FORCE_PROD=1 ./start.sh
+   — stop the cloud service first: ssh kitpri-vm 'sudo systemctl stop kitpri-bot')
+
+GUARD
+  exit 1
+fi
+[[ -n "${tok_user:-}" ]] && echo "token identity: @${tok_user} (not production — ok)"
+
 # Only one polling instance may exist per token (Telegram getUpdates conflict).
 # PTB's graceful shutdown can hang on SIGTERM, so wait and escalate to SIGKILL.
 if pkill -f "telegram_bot/bot.py" 2>/dev/null; then

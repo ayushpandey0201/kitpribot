@@ -63,9 +63,12 @@ cloud bot lives on a different computer and is managed via
 ./start.sh log        # follow the LOCAL bot's live log
 ```
 
-If you start a local bot with the **same token** the cloud bot uses, the
-launcher detects the Telegram `Conflict` within seconds, stops the local
-instance automatically, and tells you how to get your own test token.
+Two safety nets protect the 24/7 cloud bot from local mistakes:
+the launcher asks Telegram **whose token** it is about to use and refuses to
+start `@kitpribot`'s identity locally (Telegram always hands polling to the
+newest poller, so this would silently hijack production; override only with
+`KITPRI_FORCE_PROD=1`), and if any other same-token clash slips through it is
+detected from the log within seconds and the local instance stands down.
 
 ## Run — manual
 
