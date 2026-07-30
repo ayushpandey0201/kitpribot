@@ -81,11 +81,12 @@ reproducible from [`telegram_bot/DEPLOY.md`](telegram_bot/DEPLOY.md) +
 [`telegram_bot/kitpri-bot.service`](telegram_bot/kitpri-bot.service).
 
 To run your **own** instance locally instead (requires your own token, since
-only one poller per token is allowed):
+only one poller per token is allowed) — the launcher **bootstraps everything
+itself** on first run (venv, CPU torch, all deps, the `kitpri` package):
 
 ```bash
 echo 'TELEGRAM_BOT_TOKEN=<token from @BotFather>' > .env   # one-time, gitignored
-telegram_bot/start.sh          # start · stop · status · log
+telegram_bot/start.sh          # first run: full setup + start · also: setup · stop · status · log
 ```
 
 Full instructions: [`telegram_bot/README.md`](telegram_bot/README.md).
@@ -383,3 +384,15 @@ modal run training/distill_mobilenet.py   # distillation (T=3.0, α=0.4)
 modal run training/quantize.py            # static INT8 PTQ (500-clip calibration; original run
                                           # used fbgemm/x86 — configs now default to qnnpack for ARM)
 ```
+
+### Deploying a newly trained model
+
+The serving stack picks up new checkpoints without code changes — the
+`Predictor` auto-detects TorchScript vs. training checkpoints
+(`{"model_state": ...}`) and fingerprints the architecture from the weights.
+The short version: re-sweep your threshold on validation, then either point
+the bot at the file via `.env` (`KITPRI_BOT_CKPT=` / `KITPRI_BOT_THRESHOLD=`)
+or drop-in replace `inference/student_mobilenet_fp32.pt` + update
+`configs/models/mobilenetv2_student.yaml`. Full step-by-step (including
+rolling it out to the 24/7 cloud bot):
+[`telegram_bot/README.md` § Swapping in a new model](telegram_bot/README.md#swapping-in-a-new-model).

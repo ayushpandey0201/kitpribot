@@ -14,12 +14,18 @@ Runs the **FP32 MobileNetV2 student** (threshold 0.44) through the unified
 
 ## Setup (from the repo root)
 
+**There is no manual setup.** The launcher bootstraps everything on first run
+— creates `venv/`, installs CPU-only torch + all dependencies, installs the
+`kitpri` package — then starts the bot:
+
 ```bash
-python3 -m venv venv && source venv/bin/activate
-pip install --extra-index-url https://download.pytorch.org/whl/cpu -r requirements.txt
-pip install -e .            # installs the kitpri package
-brew install ffmpeg          # voice messages arrive as .ogg
+echo 'TELEGRAM_BOT_TOKEN=<token from @BotFather>' > .env   # one-time, gitignored
+telegram_bot/start.sh                                       # bootstraps + starts
 ```
+
+Only external nicety: `ffmpeg` for voice notes (`brew install ffmpeg` /
+`sudo apt-get install -y ffmpeg`) — the launcher warns if it's missing.
+To bootstrap without starting (e.g. on a fresh server): `telegram_bot/start.sh setup`.
 
 ## Run — the easy way
 
@@ -33,6 +39,7 @@ Then:
 
 ```bash
 telegram_bot/start.sh            # start (auto-restarts a running instance)
+telegram_bot/start.sh setup     # first-time bootstrap only (venv + deps), no start
 telegram_bot/start.sh status     # is it running?
 telegram_bot/start.sh log        # follow the live log
 telegram_bot/start.sh stop       # stop
@@ -62,6 +69,46 @@ Long polling — no ngrok, webhooks, or port forwarding needed.
 | `--ckpt`      | `inference/student_mobilenet_fp32.pt` | model checkpoint                    |
 | `--config`    | `configs/experiments/distill.yaml`    | audio profile + per-model threshold |
 | `--threshold` | from config (0.44)                    | override decision threshold         |
+
+## Swapping in a new model
+
+Trained a better classifier? The bot picks it up in one of three ways — no
+code changes needed. The `Predictor` auto-detects the format: TorchScript
+archives, training checkpoints (`{"model_state": ...}` exactly as
+`training/*.py` save them), or bare state dicts all load as-is.
+
+**Option A — config-driven (recommended).** Add two lines to the repo-root
+`.env` and restart; nothing else changes:
+
+```bash
+KITPRI_BOT_CKPT=inference/my_new_model.pt      # path relative to repo root
+KITPRI_BOT_THRESHOLD=0.52                      # from YOUR validation sweep
+```
+```bash
+telegram_bot/start.sh          # restarts with the new model — log line confirms it
+```
+
+**Option B — drop-in replace.** Overwrite
+[`inference/student_mobilenet_fp32.pt`](../inference/student_mobilenet_fp32.pt)
+with your new checkpoint and restart. Also update `threshold:` in
+[`configs/models/mobilenetv2_student.yaml`](../configs/models/mobilenetv2_student.yaml)
+— that's where the default 0.44 lives.
+
+**Option C — one-off manual run.** `python telegram_bot/bot.py --ckpt path/to/model.pt --threshold 0.52`
+
+**Rules that keep you honest:**
+1. **Re-sweep the threshold on the validation set** for every new model — 0.44
+   belongs to the current FP32 student, not to your new one
+   (`results/.../student_threshold_sweep.csv` shows the method).
+2. **Same architecture?** Nothing to do — MobileNetV2 and AST checkpoints are
+   fingerprinted automatically. **New architecture?** Register it in
+   [`src/kitpri/models/registry.py`](../src/kitpri/models/registry.py) and add its
+   key fingerprint in [`src/kitpri/inference/predictor.py`](../src/kitpri/inference/predictor.py).
+3. **Shipping to the cloud bot:** `.gitignore` blocks `*.pt` by default — add a
+   negation (`!inference/my_new_model.pt`), commit, push, then
+   `ssh kitpri-vm 'cd kitpri && git pull && sudo systemctl restart kitpri-bot'`.
+   (Or skip git: `scp my_new_model.pt kitpri-vm:kitpri/inference/` + restart.)
+   If you used Option A, remember the VM has its **own** `.env` — update it there too.
 
 ## Cloud hosting — how the live bot runs
 

@@ -35,6 +35,14 @@ sudo apt-get install -y python3-venv libsndfile1 ffmpeg git
 git clone https://github.com/ayushpandey0201/kitpribot.git kitpri
 cd kitpri
 
+# one command does venv + CPU torch + all deps + kitpri package:
+telegram_bot/start.sh setup
+```
+
+<details>
+<summary>Manual equivalent of <code>start.sh setup</code></summary>
+
+```bash
 python3 -m venv venv
 venv/bin/python -m pip install --upgrade pip
 venv/bin/python -m pip install \
@@ -42,6 +50,8 @@ venv/bin/python -m pip install \
     -r requirements.txt
 venv/bin/python -m pip install -e . --no-deps
 ```
+
+</details>
 
 ## 3. Token + smoke test
 
@@ -77,6 +87,12 @@ cd ~/kitpri
 git pull
 sudo systemctl restart kitpri-bot
 ```
+
+Same flow ships a **new model**: commit the new `.pt` (add a `.gitignore`
+negation like `!inference/my_new_model.pt` — checkpoints are ignored by
+default), push, `git pull` + restart here. If the model is selected via
+`KITPRI_BOT_CKPT` in `.env`, remember the VM has its own `.env` to update.
+Details: [README.md § Swapping in a new model](README.md#swapping-in-a-new-model).
 
 ## Troubleshooting
 

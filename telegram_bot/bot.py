@@ -140,12 +140,18 @@ def main():
     parser = argparse.ArgumentParser(description="Kitchen Audio Telegram Bot")
     parser.add_argument("--token", default=os.environ.get("TELEGRAM_BOT_TOKEN"),
                         help="Telegram Bot Token (or set TELEGRAM_BOT_TOKEN env var)")
-    parser.add_argument("--ckpt", default=str(repo_root / "inference/student_mobilenet_fp32.pt"),
-                        help="Path to the KitPri v4 FP32 student checkpoint")
+    parser.add_argument("--ckpt",
+                        default=os.environ.get("KITPRI_BOT_CKPT",
+                                               str(repo_root / "inference/student_mobilenet_fp32.pt")),
+                        help="model checkpoint (or set KITPRI_BOT_CKPT env var; "
+                             "default: the shipped FP32 student)")
     parser.add_argument("--config", default=str(repo_root / "configs/experiments/distill.yaml"),
                         help="kitpri experiment config (audio profile + per-model threshold)")
-    parser.add_argument("--threshold", type=float, default=None,
-                        help="Override the config threshold (default: from config, 0.44)")
+    parser.add_argument("--threshold", type=float,
+                        default=(float(os.environ["KITPRI_BOT_THRESHOLD"])
+                                 if os.environ.get("KITPRI_BOT_THRESHOLD") else None),
+                        help="Override the config threshold (or set KITPRI_BOT_THRESHOLD; "
+                             "default: from config, 0.44)")
     args = parser.parse_args()
 
     if not args.token:
@@ -155,6 +161,7 @@ def main():
     # evaluation, so bot preprocessing can never drift from training.
     device = get_device()
     logger.info(f"Using device: {device}")
+    logger.info(f"Checkpoint: {args.ckpt}")
     PREDICTOR = Predictor(args.ckpt, config_path=args.config,
                           threshold=args.threshold, device=str(device))
     logger.info(f"Model loaded and ready (threshold={PREDICTOR.threshold}).")
