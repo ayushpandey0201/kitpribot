@@ -7,6 +7,9 @@ Runs the **FP32 MobileNetV2 student** (threshold 0.44) through the unified
 `kitpri.inference.Predictor` — the exact same preprocessing and model code as
 `inference/predict.py`, so the bot cannot drift from the evaluated pipeline.
 
+> **Hosting it 24/7 in the cloud** (so it works while your laptop is closed):
+> see [DEPLOY.md](DEPLOY.md) — Oracle Always Free VM + systemd, $0/month.
+
 ## Setup (from the repo root)
 
 ```bash
@@ -52,11 +55,11 @@ Long polling — no ngrok, webhooks, or port forwarding needed.
 
 ## Options
 
-| Flag | Default | Description |
-|---|---|---|
-| `--ckpt` | `inference/student_mobilenet_fp32.pt` | model checkpoint |
-| `--config` | `configs/experiments/distill.yaml` | audio profile + per-model threshold |
-| `--threshold` | from config (0.44) | override decision threshold |
+| Flag          | Default                               | Description                         |
+| ------------- | ------------------------------------- | ----------------------------------- |
+| `--ckpt`      | `inference/student_mobilenet_fp32.pt` | model checkpoint                    |
+| `--config`    | `configs/experiments/distill.yaml`    | audio profile + per-model threshold |
+| `--threshold` | from config (0.44)                    | override decision threshold         |
 
 ## Notes
 

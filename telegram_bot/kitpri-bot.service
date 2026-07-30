@@ -1,0 +1,27 @@
+# systemd unit for the KitPri Telegram bot (cloud VM deployment).
+# Install:  sudo cp telegram_bot/kitpri-bot.service /etc/systemd/system/
+#           sudo systemctl daemon-reload && sudo systemctl enable --now kitpri-bot
+# Logs:     journalctl -u kitpri-bot -f
+#
+# Assumes repo cloned to /home/ubuntu/kitpri with a venv at ./venv and a .env
+# file (TELEGRAM_BOT_TOKEN=...) at the repo root. Adjust paths/User if different.
+
+[Unit]
+Description=KitPri Telegram bot (cooking sound classifier)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/kitpri
+EnvironmentFile=/home/ubuntu/kitpri/.env
+ExecStart=/home/ubuntu/kitpri/venv/bin/python telegram_bot/bot.py
+Restart=always
+RestartSec=5
+# python-telegram-bot's graceful shutdown can hang on SIGTERM;
+# after 15s systemd escalates to SIGKILL (same lesson as start.sh).
+TimeoutStopSec=15
+
+[Install]
+WantedBy=multi-user.target
