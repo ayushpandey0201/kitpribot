@@ -20,12 +20,12 @@ Runs the **FP32 MobileNetV2 student** (threshold 0.44) through the unified
 
 ```bash
 echo 'TELEGRAM_BOT_TOKEN=<token from @BotFather>' > .env   # one-time, gitignored
-telegram_bot/start.sh                                       # bootstraps + starts
+./start.sh                                       # bootstraps + starts
 ```
 
 Only external nicety: `ffmpeg` for voice notes (`brew install ffmpeg` /
 `sudo apt-get install -y ffmpeg`) — the launcher warns if it's missing.
-To bootstrap without starting (e.g. on a fresh server): `telegram_bot/start.sh setup`.
+To bootstrap without starting (e.g. on a fresh server): `./start.sh setup`.
 
 ## Run — the easy way
 
@@ -38,11 +38,11 @@ TELEGRAM_BOT_TOKEN=<token from @BotFather>
 Then:
 
 ```bash
-telegram_bot/start.sh            # start (auto-restarts a running instance)
-telegram_bot/start.sh setup     # first-time bootstrap only (venv + deps), no start
-telegram_bot/start.sh status     # is it running?
-telegram_bot/start.sh log        # follow the live log
-telegram_bot/start.sh stop       # stop
+./start.sh            # start (auto-restarts a running instance)
+./start.sh setup     # first-time bootstrap only (venv + deps), no start
+./start.sh status     # is it running?
+./start.sh log        # follow the live log
+./start.sh stop       # stop
 ```
 
 ## Run — manual
@@ -85,7 +85,7 @@ KITPRI_BOT_CKPT=inference/my_new_model.pt      # path relative to repo root
 KITPRI_BOT_THRESHOLD=0.52                      # from YOUR validation sweep
 ```
 ```bash
-telegram_bot/start.sh          # restarts with the new model — log line confirms it
+./start.sh          # restarts with the new model — log line confirms it
 ```
 
 **Option B — drop-in replace.** Overwrite
@@ -140,7 +140,7 @@ troubleshooting): **[DEPLOY.md](DEPLOY.md)**.
 > ⚠️ **One poller per token.** Telegram rejects concurrent `getUpdates`
 > consumers (HTTP 409). While the cloud bot is running, do not start a local
 > instance with the same token — stop one side first
-> (`telegram_bot/start.sh stop` locally, or `sudo systemctl stop kitpri-bot`
+> (`./start.sh stop` locally, or `sudo systemctl stop kitpri-bot`
 > on the VM).
 
 ## Notes

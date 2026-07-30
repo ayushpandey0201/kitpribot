@@ -1,23 +1,23 @@
 #!/usr/bin/env bash
 # KitPri Telegram bot launcher — zero-setup path for new users:
 #   1. put TELEGRAM_BOT_TOKEN=... in a .env file at the repo root (gitignored)
-#   2. run:  telegram_bot/start.sh
+#   2. run:  ./start.sh
 # First run bootstraps EVERYTHING automatically (venv, CPU torch, all deps,
 # the kitpri package). Subsequent runs skip straight to starting the bot.
 #
 # Usage:
-#   telegram_bot/start.sh          start (bootstraps first if needed)
-#   telegram_bot/start.sh setup    bootstrap only (venv + deps), don't start
-#   telegram_bot/start.sh stop     stop the bot
-#   telegram_bot/start.sh status   is it running?
-#   telegram_bot/start.sh log      follow the live log
+#   ./start.sh          start (bootstraps first if needed)
+#   ./start.sh setup    bootstrap only (venv + deps), don't start
+#   ./start.sh stop     stop the bot
+#   ./start.sh status   is it running?
+#   ./start.sh log      follow the live log
 #
 # Custom model (see telegram_bot/README.md § "Swapping in a new model"):
 #   optionally set in .env —
 #     KITPRI_BOT_CKPT=inference/my_new_model.pt
 #     KITPRI_BOT_THRESHOLD=0.52
 set -euo pipefail
-cd "$(dirname "$0")/.."   # repo root, regardless of where invoked from
+cd "$(dirname "$0")"      # repo root (script lives there)
 
 PY=venv/bin/python
 
@@ -65,7 +65,7 @@ case "${1:-start}" in
     # Redact any token that older log lines may contain
     exec tail -f bot.log | sed -E 's#bot[0-9]+:[A-Za-z0-9_-]+#bot<TOKEN-REDACTED>#g' ;;
   start) ;;
-  *) echo "usage: telegram_bot/start.sh [setup|stop|status|log]"; exit 2 ;;
+  *) echo "usage: ./start.sh [setup|stop|status|log]"; exit 2 ;;
 esac
 
 bootstrap
@@ -100,7 +100,7 @@ done
 
 if pgrep -f "telegram_bot/bot.py" >/dev/null; then
   grep -E "Using device|Model loaded" bot.log | sed 's/^/  /'
-  echo "bot RUNNING (pid $(pgrep -f 'telegram_bot/bot.py' | tr '\n' ' ')) — follow with: telegram_bot/start.sh log"
+  echo "bot RUNNING (pid $(pgrep -f 'telegram_bot/bot.py' | tr '\n' ' ')) — follow with: ./start.sh log"
 else
   echo "bot FAILED to start — last log lines:"
   tail -5 bot.log

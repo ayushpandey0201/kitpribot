@@ -86,7 +86,7 @@ itself** on first run (venv, CPU torch, all deps, the `kitpri` package):
 
 ```bash
 echo 'TELEGRAM_BOT_TOKEN=<token from @BotFather>' > .env   # one-time, gitignored
-telegram_bot/start.sh          # first run: full setup + start · also: setup · stop · status · log
+./start.sh          # first run: full setup + start · also: setup · stop · status · log
 ```
 
 Full instructions: [`telegram_bot/README.md`](telegram_bot/README.md).

@@ -6,7 +6,7 @@ always-on Linux VM works; Oracle's Always Free tier costs $0.
 
 > **One poller per token.** Telegram allows only one `getUpdates` consumer.
 > Before (or right after) the cloud bot starts, stop the laptop one:
-> `telegram_bot/start.sh stop`. Two pollers = `Conflict: terminated by other
+> `./start.sh stop`. Two pollers = `Conflict: terminated by other
 > getUpdates request` errors.
 
 ## 1. Create the VM
@@ -36,7 +36,7 @@ git clone https://github.com/ayushpandey0201/kitpribot.git kitpri
 cd kitpri
 
 # one command does venv + CPU torch + all deps + kitpri package:
-telegram_bot/start.sh setup
+./start.sh setup
 ```
 
 <details>
@@ -97,7 +97,7 @@ Details: [README.md § Swapping in a new model](README.md#swapping-in-a-new-mode
 ## Troubleshooting
 
 - **`Conflict: terminated by other getUpdates request`** — another instance is
-  polling with the same token (usually the laptop). `telegram_bot/start.sh stop`
+  polling with the same token (usually the laptop). `./start.sh stop`
   locally, then `sudo systemctl restart kitpri-bot`.
 - **OOM / killed on E2.1.Micro (1 GB)** — add swap:
   ```bash
