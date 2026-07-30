@@ -598,35 +598,80 @@ Cost             & \$0 (Always Free tier, no time limit) \\
 \begin{figure}[h]
 \centering
 \begin{tikzpicture}[
-  node distance=6mm and 12mm,
+  node distance=6mm and 11mm,
   box/.style={draw, rounded corners=2pt, align=center, font=\small,
               minimum height=9mm, inner sep=5pt},
-  arr/.style={{Stealth[length=2.4mm]}-{Stealth[length=2.4mm]}, thick, kpgray}
+  arr/.style={{Stealth[length=2.4mm]}-{Stealth[length=2.4mm]}, thick, kpgray},
+  darr/.style={{Stealth[length=2.4mm]}-{Stealth[length=2.4mm]}, thick, kpgray, densely dashed}
 ]
 \node[box, fill=kpblue!12] (user) {User's phone\\ \footnotesize voice note / audio file};
 \node[box, fill=kpgray!14, right=of user] (tg) {Telegram\\ Bot API};
-\node[box, fill=kpgreen!14, right=of tg, text width=4.6cm]
-  (vm) {Oracle Always-Free VM\\[1pt]
+\node[box, fill=kpgreen!14, right=of tg, yshift=9mm, text width=4.6cm]
+  (vm) {\textbf{Production} — Oracle Always-Free VM\\[1pt]
         \footnotesize systemd $\rightarrow$ \texttt{bot.py} $\rightarrow$ \texttt{Predictor}\\
-        \footnotesize FP32 student · $\tau{=}0.44$ · CPU};
+        \footnotesize FP32 student · $\tau{=}0.44$ · CPU · 24/7};
+\node[box, fill=kporange!12, right=of tg, yshift=-9mm, text width=4.6cm]
+  (lap) {\textbf{Developer laptop} (optional)\\[1pt]
+         \footnotesize \texttt{./start.sh} · \emph{separate test-bot token}\\
+         \footnotesize = a different bot identity};
 \draw[arr] (user) -- (tg);
-\draw[arr] (tg) -- node[above, font=\scriptsize, text=kpgray]
-  {outbound long poll} (vm);
-\node[below=2.5mm of vm, font=\scriptsize, text=kpgray]
-  {no inbound ports · no webhook · no public URL};
+\draw[arr] (tg) -- node[above, sloped, font=\scriptsize, text=kpgray]
+  {production token} (vm);
+\draw[darr] (tg) -- node[below, sloped, font=\scriptsize, text=kpgray]
+  {test token} (lap);
+\node[below=11mm of tg, font=\scriptsize, text=kpgray, align=center]
+  {no inbound ports · no webhook · no public URL — both machines poll outbound};
 \end{tikzpicture}
-\caption{Serving topology. The VM initiates all connections; the demo
-survives laptop shutdown, process crashes (systemd restart), and VM reboots
-(service enabled at boot).}
+\caption{Serving topology. One token = one bot identity, and Telegram routes
+updates to the \emph{newest} poller — so production and local testing use
+disjoint tokens, enforced by the launcher's identity guard
+(Section~\ref{sec:ops-safety}).}
 \label{fig:hosting}
 \end{figure}
 
 The deployment is reproducible from two committed artifacts: a step-by-step
 guide (\texttt{telegram\_bot/DEPLOY.md}) and the systemd unit
-(\texttt{telegram\_bot/kitpri-bot.service}); local development retains the
-\texttt{start.sh} launcher, with the operational rule that the laptop poller
-must be stopped whenever the cloud poller is active (the 409-conflict
-constraint of Section~\ref{sec:bot}).
+(\texttt{telegram\_bot/kitpri-bot.service}).
+
+\subsection{Operational safeguards and developer ergonomics}\label{sec:ops-safety}
+
+The token-identity semantics above create one dangerous failure mode: because
+Telegram always transfers polling to the \emph{newest} \texttt{getUpdates}
+consumer, a developer starting the production token on a laptop would
+\emph{silently hijack} the live bot --- the cloud instance receives the
+\texttt{409 Conflict} errors while user traffic drains to the laptop. This
+exact incident occurred once during development and motivated the following
+layered controls in the launcher (\texttt{start.sh} / \texttt{stop.sh}):
+
+\begin{enumerate}[itemsep=2pt,topsep=3pt]
+  \item \textbf{Production-identity guard.} Before starting, the launcher
+        resolves the configured token's identity via the Bot API
+        (\texttt{getMe}) and \emph{refuses} to start the production identity
+        on a non-production machine. A deliberate override
+        (\texttt{KITPRI\_FORCE\_PROD=1}) exists for planned failover, with
+        instructions to stop the cloud service first.
+  \item \textbf{Conflict stand-down.} If any same-token clash slips through,
+        the launcher detects Telegram's \texttt{Conflict} response in the
+        process log within seconds, terminates the local instance, and
+        explains the remedy.
+  \item \textbf{Locality by construction.} \texttt{stop.sh} terminates every
+        bot process on the local machine (including manually started strays)
+        and \emph{cannot} affect the VM --- production is only ever managed
+        through an explicit \texttt{ssh \dots systemctl} command.
+  \item \textbf{Zero-setup onboarding.} The launcher bootstraps the entire
+        environment (venv, CPU-only torch, dependencies, package) on first
+        run. With no token configured it offers an interactive choice:
+        a guided in-terminal @BotFather walkthrough that provisions a
+        personal \emph{test} bot, or an environment-only path for model
+        development that prints the exact recipe for shipping a new
+        checkpoint to the production bot.
+  \item \textbf{Config-driven model swap.} A new checkpoint is deployed by
+        two \texttt{.env} lines (\texttt{KITPRI\_BOT\_CKPT},
+        \texttt{KITPRI\_BOT\_THRESHOLD}) honored identically under the local
+        launcher and systemd; the \texttt{Predictor} auto-detects TorchScript
+        vs.\ state-dict formats and fingerprints the architecture from
+        checkpoint keys, so no code changes are involved.
+\end{enumerate}
 
 % -----------------------------------------------------------------------------
 \section{Limitations and Future Work}\label{sec:limits}

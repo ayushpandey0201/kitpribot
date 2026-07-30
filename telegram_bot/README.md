@@ -12,6 +12,30 @@ Runs the **FP32 MobileNetV2 student** (threshold 0.44) through the unified
 > Setup below is only needed to run your *own* instance; hosting details are
 > in [Cloud hosting](#cloud-hosting--how-the-live-bot-runs) and [DEPLOY.md](DEPLOY.md).
 
+## Architecture — one bot identity per token, two possible machines
+
+```mermaid
+flowchart LR
+    U[👤 Telegram user] --> T[Telegram servers]
+    T -- "production token" --> VM["☁️ Oracle VM — 24/7\nsystemd: kitpri-bot\nTHE @kitpribot"]
+    T -. "your own TEST token\n= a different bot" .-> L["💻 Your laptop\n./start.sh process"]
+```
+
+Four rules explain every behavior of the tooling:
+
+| # | Rule | Consequence |
+| --- | --- | --- |
+| 1 | **A bot identity = a token.** `@kitpribot` *is* its token. | Whoever polls with that token *is* the bot at that moment. |
+| 2 | **The cloud VM polls the production token 24/7.** | All `@kitpribot` messages are answered from Oracle — laptops irrelevant. |
+| 3 | **Telegram hands a token to the NEWEST poller.** | A local start with the production token silently **hijacks** production (the VM gets `Conflict` errors, not you). |
+| 4 | **Local testing therefore uses a separate test bot/token.** | Local and production run simultaneously with zero interference. |
+
+Rule 3 is why the launcher carries a **production-identity guard**: before
+starting, it asks Telegram whose token it holds (`getMe`) and **refuses** to
+run `@kitpribot`'s identity on a laptop (deliberate override:
+`KITPRI_FORCE_PROD=1`, after stopping the cloud service). A second net catches
+any other same-token clash from the log within seconds and stands down.
+
 ## Setup (from the repo root)
 
 **There is no manual setup.** The launcher bootstraps everything on first run
@@ -62,13 +86,6 @@ cloud bot lives on a different computer and is managed via
 ./start.sh status     # is a LOCAL bot running?
 ./start.sh log        # follow the LOCAL bot's live log
 ```
-
-Two safety nets protect the 24/7 cloud bot from local mistakes:
-the launcher asks Telegram **whose token** it is about to use and refuses to
-start `@kitpribot`'s identity locally (Telegram always hands polling to the
-newest poller, so this would silently hijack production; override only with
-`KITPRI_FORCE_PROD=1`), and if any other same-token clash slips through it is
-detected from the log within seconds and the local instance stands down.
 
 ## Run — manual
 

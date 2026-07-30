@@ -80,6 +80,19 @@ Cloud Always-Free VM (long polling — no inbound ports, $0/month), so
 reproducible from [`telegram_bot/DEPLOY.md`](telegram_bot/DEPLOY.md) +
 [`telegram_bot/kitpri-bot.service`](telegram_bot/kitpri-bot.service).
 
+```mermaid
+flowchart LR
+    U[👤 Telegram user] --> T[Telegram servers]
+    T -- "production token" --> VM["☁️ Oracle VM — 24/7\nTHE @kitpribot"]
+    T -. "your own TEST token\n= a different bot" .-> L["💻 laptop — ./start.sh"]
+```
+
+A bot identity *is* its token, and Telegram hands a token to the **newest**
+poller — so `./start.sh` guards production: it checks the token's identity
+(`getMe`) and refuses to start `@kitpribot` locally; local testing uses your
+own free test bot (the launcher's first-run menu walks you through @BotFather).
+Full architecture + rules: [`telegram_bot/README.md`](telegram_bot/README.md).
+
 To run your **own** instance locally instead (requires your own token, since
 only one poller per token is allowed) — the launcher **bootstraps everything
 itself** (venv, CPU torch, deps) and, with no token configured, **guides you
